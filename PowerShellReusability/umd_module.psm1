@@ -1,0 +1,181 @@
+﻿<#  Things to note:
+       - Function/cmdlet naming conventions.
+       - Comment tags.
+       - CmdletBinding attribute.
+       - Function definition and use.
+       - Parameter default values.
+#>
+
+function Out-UdfSpeech  
+{ 
+ <#
+     .SYNOPSIS 
+     Speaks the string passed to it.
+
+     .DESCRIPTION
+     This function uses the SAPI interface to speak.
+
+     .PARAMETER $speakit
+     The string to be spoken.
+
+     .INPUTS
+     This function does not support piping.
+
+     .OUTPUTS
+     Describe what this function returns.
+
+     .EXAMPLE
+     Out-UdfSpeach 'Something to be said.'
+
+     .LINK
+     www.SAPIHelp.com.
+
+#>
+[CmdletBinding()]
+        param (
+              [string]$speakit = 'What do you want me to say?'
+          )
+  #  Fun using SAPI - the text to speech thing....    
+
+  $speaker = new-object -com SAPI.SpVoice
+
+  $speaker.Speak($speakit, 1) | out-null
+
+}
+
+<#  Example call...
+
+Get-Help Out-UdfSpeech
+Out-UdfSpeech 
+Out-UdfSpeech 'It is a beautiful day!'
+
+#>  
+
+<# Things to note...
+   - Leveraging Windows to support user interaction.
+   - Using cmdlets in assigning parameter default values.
+   - Using environment variables.
+   - CmdletBinding and Write-Verbose.
+#>
+Function Get-UdfFileName
+{  
+[CmdletBinding()]
+        param (
+              [string]$InitialDirectory = (Join-Path -Path $env:HOMEDRIVE -ChildPath $env:HOMEPATH) 
+          )
+
+ [System.Reflection.Assembly]::LoadWithPartialName("System.windows.forms") | Out-Null
+
+ $OpenFileDialog = New-Object System.Windows.Forms.OpenFileDialog
+ $OpenFileDialog.initialDirectory = $initialDirectory
+ $OpenFileDialog.filter = "All files (*.*)| *.*"
+ $OpenFileDialog.ShowDialog() | Out-Null
+ $OpenFileDialog.filename
+
+ Write-Verbose "You selected $OpenFileDialog ."
+}
+
+<# Example Call...
+  Get-UdfFileName -Verbose
+#>
+
+
+<# Things to note...
+   - Combining functions.
+   - Using PS variables.
+   - Nesting cmdlets withing parentheses.
+   - Using a module.
+   - $PSScriptRoot
+   - Creating a script module.
+#>
+Function Out-UdfSpeakFileContents
+{  
+[CmdletBinding()]
+        param (
+              [string]$InitialDirectory = ($PSScriptRoot) 
+          )
+
+       [string]$speech = Get-Content (Get-UdfFileName -InitialDirectory $InitialDirectory)
+       Out-UdfSpeech $speech
+
+}
+
+<# Example Call...
+  Out-UdfSpeakFileContents
+#>
+
+function Invoke-UdfSQLStatement
+{ 
+ [CmdletBinding()]
+        param (
+              [string]$Server,
+              [string]$Database,
+              [string]$SQL,
+              [switch]$IsSelect
+          )
+
+  Write-Verbose "open connecton"
+
+  $conn = new-object System.Data.SqlClient.SqlConnection("Data Source=$Server;Integrated Security=SSPI;Initial Catalog=$Database");
+
+  $conn.Open()
+
+  $command = new-object system.data.sqlclient.Sqlcommand($SQL,$conn)
+
+  if ($IsSelect) 
+  { 
+     
+     $adapter = New-Object System.Data.sqlclient.SqlDataAdapter $command
+     $dataset = New-Object System.Data.DataSet
+     $adapter.Fill($dataset) | Out-Null
+     $conn.Close()
+     RETURN $dataset.tables[0] 
+  }
+  Else
+  {
+     $command.ExecuteNonQuery()
+     $conn.Close()
+  }
+}
+
+<# Example call 
+Invoke-UdfSQLStatement -Server '(local)' -Database 'Development' -SQL 'select top 10 * from dbo.orders' -IsSelect 
+#>
+
+<# Demo of using modules to support configuraton...
+
+Import-Module umd_appconfig
+
+Get-UdfConfiguation 'EDWServer'
+
+Invoke-UdfSQLStatement -Server (Get-UdfConfiguation 'EDWServer') `
+                       -Database 'Development' -SQL 'select top 10 * from dbo.orders' -IsSelect 
+
+
+#>
+
+#  Question - Is this an advanced function?
+function Out-UdfPipeline
+{
+
+  begin
+  {
+   "`nWe are going to start and there is no pipeline yet."
+   #  Let do something initialization like...
+   [integer]$mycount = 0
+  }
+
+  process 
+  {
+   $_
+   $mycount++
+  }
+
+  end
+  {
+   "`nThere are $mycount items."
+  }
+
+}
+
+Get-ChildItem | Out-UdfPipeline
