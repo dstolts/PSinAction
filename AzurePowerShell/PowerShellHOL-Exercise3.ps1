@@ -1,10 +1,6 @@
 ﻿#login to your azure account
 Login-AzureRmAccount
 
-Get-AzureRmSubscription
-
-Get-AzureRmSubscription -SubscriptionId  "eca22a54-be44-429c-a9af-b2f063811933" | Select-AzureRmSubscription
-
 #variable for Db creation
 $id = [Guid]::NewGuid().ToString("n").SubString(0,8)
 $resourceGroupName = $id + "-rg"
