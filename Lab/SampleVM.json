@@ -1,0 +1,107 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "adminUserName": { "type": "string" },
+    "adminPassword": { "type": "securestring" }
+  },
+  "variables": {
+    "vnetID":"[resourceId('Microsoft.Network/virtualNetworks','SampleVNet')]",
+    "subnetRef": "[concat(variables('vnetID'),'/subnets/SampleSubnet')]"  
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "mysamplestorage1",
+      "apiVersion": "2015-06-15",
+      "location": "[resourceGroup().location]",
+      "properties": { "accountType": "Standard_LRS" }
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "myip1",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": { "domainNameLabel": "mydns1" }
+      }
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "SampleVNet",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "addressSpace": { "addressPrefixes": [ "10.0.0.0/16" ] },
+        "subnets": [ {
+          "name": "SampleSubnet",
+          "properties": { "addressPrefix": "10.0.0.0/24" }
+        } ]
+      }
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "mync1",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "Microsoft.Network/publicIPAddresses/myip1",
+        "Microsoft.Network/virtualNetworks/SampleVNet"
+      ],
+      "properties": {
+        "ipConfigurations": [ {
+          "name": "ipconfig1",
+          "properties": {
+            "privateIPAllocationMethod": "Dynamic",
+            "publicIPAddress": {
+              "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'myip1')]"
+            },
+            "subnet": { "id": "[variables('subnetRef')]" }
+          }
+        } ]
+      }
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "myvm1",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "Microsoft.Network/networkInterfaces/mync1",
+        "Microsoft.Storage/storageAccounts/mysamplestorage1"
+      ],
+      "properties": {
+        "hardwareProfile": { "vmSize": "Standard_A1" },
+        "osProfile": {
+          "computerName": "myvm1",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "2012-R2-Datacenter",
+            "version" : "latest"
+          },
+          "osDisk": {
+            "name": "myosdisk1",
+            "vhd": {
+              "uri": "https://mystorage1.blob.core.windows.net/vhds/myosdisk1.vhd"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces" : [ {
+            "id": "[resourceId('Microsoft.Network/networkInterfaces','mync1')]"
+          } ]
+        }
+      }
+    } ]
+
+}
+
+
