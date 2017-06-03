@@ -1,0 +1,74 @@
+# GitHub
+
+# https://github.com/poshbotio/PoshBot
+# Follow people and you'll see projects they star show up - handy for discovering new things
+# Create an account - free account
+# Star projects!
+# No need to dive into code:
+  # submit or upvote issues
+    # bug reports, feature requests, etc.
+  # add documentation
+  # add tests
+  # fix minor bugs
+# Fork (copy) someone's repo, make a change, submit them a pull request (suggestion to use your code)
+
+
+
+# git cli - assumes you've installed git and added it to path
+
+git clone https://github.com/poshbotio/PoshBot.git
+cd PoshBot
+
+# I removed something I need
+# can't remember a keyword
+# but I mentioned 'remove' in commit message!
+    git log
+
+    # Set up a quick alias for pretty output - git lg will now run git log....
+    git config --global alias.lg "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
+
+    # Search commit messages for 'remove'
+    git lg --all -i --grep='remove'
+
+    # Search commit messages... and show diff
+    git log --all -i --grep='remove' -p
+
+# I know something broke in the last 2 weeks...
+git lg --no-merges --raw --since='2 weeks ago'
+
+# So-and-so is working on something interesting.  Let's wee what they're doing!
+git log --author=rambling
+
+# Which commits had content changed with regex 'scooby'?
+git log -G scooby -i -p
+
+# Remove-PoshbotStatefulData.ps1 is a mess.  Who wrote each line?
+git blame ./PoshBot/Public/Remove-PoshbotStatefulData.ps1
+
+# I know I have something to do... search current codebase for todo!
+git grep -i 'todo'
+
+
+
+
+# VSCode
+
+# GitLens
+# https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens
+
+# Blame annotations - click line to see hash, message, hover to see user, date
+
+# Click author header for commit details etc., click author list if applicable for blame details
+# File history
+Option+H - File History
+
+# File history explorer
+Ctrl(Command)+Shift+P history explorer
+
+
+
+
+# Silly poshbot example (https://github.com/poshbotio/PoshBot)
+
+!user wframe
+!rt 111776
